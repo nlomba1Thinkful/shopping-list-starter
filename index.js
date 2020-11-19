@@ -1,8 +1,12 @@
+/* eslint-disable no-undef */
+'use strict';
+
+
 const store = {
   items: [
     { id: cuid(), name: 'apples', checked: false },
     { id: cuid(), name: 'oranges', checked: false },
-    { id: cuid(), name: 'milk', checked: true },
+    { id: cuid(), name: 'milk', checked: false },
     { id: cuid(), name: 'bread', checked: false }
   ],
   hideCheckedItems: false
@@ -11,6 +15,12 @@ const store = {
 const generateItemElement = function (item) {
   let itemTitle = `<span class='shopping-item shopping-item__checked'>${item.name}</span>`;
   if (!item.checked) {
+    itemTitle = `
+    <form id='edit-form'>
+    <input type="text" name="name-edit" placeholder="type item name" class="js-shopping-list-edit" value="${item.name}" required />
+    </form>`;
+  }
+  else if (!item.checked) {
     itemTitle = `
      <span class='shopping-item'>${item.name}</span>
     `;
@@ -145,6 +155,37 @@ const handleToggleFilterClick = function () {
   });
 };
 
+const editListName = function (id) {
+  const index = store.items.findIndex(item => item.id === id);
+  store.items[index].edit = true;
+};
+
+const handleEditClick = function () {
+  $('.js-shopping-list').on('click', '.js-item-edit', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    editListName(id);
+    render();
+  });
+};
+
+const saveEditName = function(name, id) {
+  const index = store.items.findIndex(item => item.id === id);
+  store.items[index].name = name;
+  store.items[index].edit = false;
+};
+
+const handleEditSubmit = function () {
+  $('.js-shopping-list').on('submit','#edit-form', event => {
+    event.preventDefault();
+    const editName = $(event.currentTarget).find('.js-shopping-list-edit').val();
+    const id = getItemIdFromElement($(event.currentTarget).parent());
+    saveEditName(editName, id);
+    render();
+
+  });
+};
+
+
 /**
  * This function will be our callback when the
  * page loads. It is responsible for initially 
@@ -160,6 +201,8 @@ const handleShoppingList = function () {
   handleItemCheckClicked();
   handleDeleteItemClicked();
   handleToggleFilterClick();
+  handleEditSubmit();
+  handleDeleteItemClicked();
 };
 
 // when the page loads, call `handleShoppingList`
